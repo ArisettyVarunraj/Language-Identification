@@ -7,4 +7,7 @@ python 2.7, Scipy and Numpy libraries.
 
 Add-one and Good-Turing smoothing methods have been implemented within this character-level language model.
 
+***Execution Instructions***
+python lm.py
+
 
