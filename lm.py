@@ -21,8 +21,11 @@ class LM:
     dev_path = "./650_a3_dev/"
     save_path = "./probs/"
     best_ngram_size_path = "./best_ngram_size/"
-    test_path = "./650_a3_dev/"
+    test_path = "./650_a3_test_final/"
 
+    unsmoothed_output_buffer = []
+    laplace_output_buffer = []
+    good_turing_output_buffer = []
 
     def robust_decode(self, bs):
         """
@@ -434,7 +437,7 @@ class LM:
                     if prior_ngram in good_turing_seen[str(ngram_size-1)]:
                         prior_prob = float(good_turing_seen[str(ngram_size-1)][prior_ngram])
                     else:
-                        #unseen ngram temp in good_turing.
+                        #unseen ngram prior_ngram in good_turing.
                         for each in good_turing_unseen.keys():
                             if(int(each)==(ngram_size-1)):
                                 prior_prob = float(good_turing_unseen[each])
@@ -604,34 +607,56 @@ class LM:
         top_laplace = sorted(top_languages_laplace.items(), key=lambda x:x[1])
         top_good_turing = sorted(top_languages_good_turing.items(), key=lambda x:x[1])
 
-        print testFileName + "\t" + top_no_smoothing[0][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[0][1]) +  \
-        "\t" + top_no_smoothing[1][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[1][1]) + \
-        "\t" + top_no_smoothing[2][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[2][1])
+        #saving results in output_buffers
 
-        print testFileName + "\t" + top_laplace[0][0]+ ".txt.tra" + "\t" + str(top_laplace[0][1]) + \
-        "\t" + top_laplace[1][0]+ ".txt.tra" + "\t" + str(top_laplace[1][1]) + \
-        "\t" + top_laplace[2][0]+ ".txt.tra" + "\t" + str(top_laplace[2][1])
+        temp_string = testFileName + "\t" + top_no_smoothing[0][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[0][1]) +  \
+                        "\t" + top_no_smoothing[1][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[1][1]) + \
+                        "\t" + top_no_smoothing[2][0]+ ".txt.tra" + "\t" + str(top_no_smoothing[2][1])
+
+        self.unsmoothed_output_buffer.append(temp_string)
 
 
-        print testFileName + "\t" + top_good_turing[0][0]+ ".txt.tra" + "\t" + str(top_good_turing[0][1]) + \
-              "\t" + top_good_turing[1][0]+ ".txt.tra" + "\t" + str(top_good_turing[1][1]) + \
-              "\t" + top_good_turing[2][0]+ ".txt.tra" + "\t" + str(top_good_turing[2][1])
-        print
-        print
+        temp_string = testFileName + "\t" + top_laplace[0][0]+ ".txt.tra" + "\t" + str(top_laplace[0][1]) + \
+                        "\t" + top_laplace[1][0]+ ".txt.tra" + "\t" + str(top_laplace[1][1]) + \
+                        "\t" + top_laplace[2][0]+ ".txt.tra" + "\t" + str(top_laplace[2][1])
+
+        self.laplace_output_buffer.append(temp_string)
+
+
+        temp_string = testFileName + "\t" + top_good_turing[0][0]+ ".txt.tra" + "\t" + str(top_good_turing[0][1]) + \
+                        "\t" + top_good_turing[1][0]+ ".txt.tra" + "\t" + str(top_good_turing[1][1]) + \
+                        "\t" + top_good_turing[2][0]+ ".txt.tra" + "\t" + str(top_good_turing[2][1])
+
+        self.good_turing_output_buffer.append(temp_string)
+
 
         return
 
+    def print_results(self):
+        no_smoothing_file = open("./results_unsmoothed.txt", "a")
+        laplace_file = open("./results_add_one.txt", "a")
+        good_turing_file = open("./results_good_turing.txt", "a")
+
+        # sort to print alphabetically
+
+        for each in sorted(self.unsmoothed_output_buffer):
+            no_smoothing_file.write(each)
+            no_smoothing_file.write("\n")
+
+        for each in sorted(self.laplace_output_buffer):
+            laplace_file.write(each)
+            laplace_file.write("\n")
+
+        for each in sorted(self.good_turing_output_buffer):
+            good_turing_file.write(each)
+            good_turing_file.write("\n")
 
 
+        no_smoothing_file.close()
+        laplace_file.close()
+        good_turing_file.close()
 
-
-
-
-
-
-
-
-
+        return
 
 
 if __name__ == "__main__":
@@ -642,10 +667,10 @@ if __name__ == "__main__":
         for each in filenames:
             lm.run(each)
 
-    #print "preplexity"
-    #examples for dev text
+
+    #examples
     """
-    no_smoothing, laplace, good_turing = lm.log_preplexity_of_text(lm.dev_path, "udhr-ssw.txt.dev", 3, "udhr-amc")
+    no_smoothing, laplace, good_turing = lm.log_preplexity_of_text(lm.dev_path, "udhr-ssw.txt.dev", 3, "udhr-eng")
     print str(no_smoothing) + "|" + str(laplace) + "|" + str(good_turing)
 
     no_smoothing, laplace, good_turing = lm.log_preplexity_of_text(lm.dev_path, "udhr-ssw.txt.dev", 3, "udhr-amc")
@@ -657,6 +682,7 @@ if __name__ == "__main__":
 
     lm.find_best_ngram_size_for_each_language()
 
+    #examples
     """
     lm.identify_language_of_text("udhr-eng.txt.dev")
     print
@@ -665,7 +691,10 @@ if __name__ == "__main__":
     lm.identify_language_of_text("udhr-ssw.txt.dev")
     """
 
+
     #test step
-    for (_, _, filenames) in walk(lm.dev_path):
+    for (_, _, filenames) in walk(lm.test_path):
         for each in filenames:
             lm.identify_language_of_text(each)
+
+    lm.print_results()
