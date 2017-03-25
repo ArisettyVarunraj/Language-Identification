@@ -11,4 +11,6 @@ Add-one and Good-Turing smoothing methods have been implemented within this char
 
 python lm.py
 
+Result files are tab seperated!
 
+average run time is 10 min!
