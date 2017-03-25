@@ -13,4 +13,4 @@ python lm.py
 
 Result files are tab seperated!
 
-average run time is 10 min!
+Average run time is 10 min!
